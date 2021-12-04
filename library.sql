@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Erstellungszeit: 03. Dez 2021 um 09:03
+-- Erstellungszeit: 04. Dez 2021 um 13:53
 -- Server-Version: 10.4.14-MariaDB
 -- PHP-Version: 7.4.9
 
@@ -77,7 +77,8 @@ CREATE TABLE `author` (
 
 INSERT INTO `author` (`author_id`, `firstname`, `lastname`) VALUES
 (1, 'hannes', 'Schmidberger'),
-(2, 'stefan', 'etzlsdorfer');
+(2, 'stefan', 'etzlsdorfer'),
+(3, 'josef', 'hasenleitner');
 
 -- --------------------------------------------------------
 
@@ -107,20 +108,43 @@ INSERT INTO `author_article` (`author_id`, `article_id`) VALUES
 CREATE TABLE `book` (
   `book_id` int(11) NOT NULL,
   `book_name` varchar(50) NOT NULL,
-  `publishing_house` int(11) DEFAULT NULL,
-  `shelves_id` int(11) DEFAULT NULL,
-  `author_id` int(11) DEFAULT NULL
+  `publishing_house_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Daten für Tabelle `book`
 --
 
-INSERT INTO `book` (`book_id`, `book_name`, `publishing_house`, `shelves_id`, `author_id`) VALUES
-(1, 'Tag der Abrechnung', 2, 1, 1),
-(2, 'Dune', 2, 2, 2),
-(3, 'Strib langsam', 1, 2, 2),
-(4, 'Stargate', 1, 2, 1);
+INSERT INTO `book` (`book_id`, `book_name`, `publishing_house_id`) VALUES
+(1, 'Tag der Abrechnung', 2),
+(2, 'Dune', 2),
+(3, 'Strib langsam', 1),
+(4, 'Stargate', 1),
+(5, 'The last day on earth', 2),
+(6, 'sdf', 1),
+(7, 'Atlas', 1);
+
+-- --------------------------------------------------------
+
+--
+-- Tabellenstruktur für Tabelle `book_athor`
+--
+
+CREATE TABLE `book_athor` (
+  `book_id` int(11) NOT NULL,
+  `athor_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Daten für Tabelle `book_athor`
+--
+
+INSERT INTO `book_athor` (`book_id`, `athor_id`) VALUES
+(1, 1),
+(2, 2),
+(3, 1),
+(3, 2),
+(3, 3);
 
 -- --------------------------------------------------------
 
@@ -131,20 +155,23 @@ INSERT INTO `book` (`book_id`, `book_name`, `publishing_house`, `shelves_id`, `a
 CREATE TABLE `book_copy` (
   `book_copy_id` int(11) NOT NULL,
   `copy_nr` int(11) NOT NULL,
-  `book_id` int(11) DEFAULT NULL
+  `book_id` int(11) DEFAULT NULL,
+  `shelves_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Daten für Tabelle `book_copy`
 --
 
-INSERT INTO `book_copy` (`book_copy_id`, `copy_nr`, `book_id`) VALUES
-(1, 1, 1),
-(2, 2, 1),
-(3, 3, 1),
-(4, 1, 1),
-(5, 2, 1),
-(6, 3, 1);
+INSERT INTO `book_copy` (`book_copy_id`, `copy_nr`, `book_id`, `shelves_id`) VALUES
+(1, 1, 1, NULL),
+(2, 2, 1, NULL),
+(3, 3, 1, NULL),
+(4, 1, 1, NULL),
+(5, 2, 1, NULL),
+(6, 3, 1, NULL),
+(7, 1, 2, 2),
+(8, 1, 2, 2);
 
 -- --------------------------------------------------------
 
@@ -168,7 +195,8 @@ CREATE TABLE `book_copy_loan` (
 
 INSERT INTO `book_copy_loan` (`book_copy_loan_id`, `book_copy_loan_date`, `book_copy_loan_return_date`, `book_copy_id`, `customer_id`, `employee_id_loan`, `employee_id_return`) VALUES
 (1, '2021-12-02', '2022-01-01', 1, 2, 2, 1),
-(2, '2021-12-02', '2001-01-01', 1, 1, 1, 1);
+(2, '2021-12-02', '2001-01-01', 1, 1, 1, 1),
+(3, '2021-12-03', NULL, 1, 1, 1, NULL);
 
 -- --------------------------------------------------------
 
@@ -199,16 +227,17 @@ CREATE TABLE `book_copy_reservation` (
   `book_copy_reservation_id` int(11) NOT NULL,
   `book_copy_reservation_date` date DEFAULT current_timestamp(),
   `book_copy_id` int(11) DEFAULT NULL,
-  `employee_id` int(11) DEFAULT NULL
+  `employee_id` int(11) DEFAULT NULL,
+  `customer_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Daten für Tabelle `book_copy_reservation`
 --
 
-INSERT INTO `book_copy_reservation` (`book_copy_reservation_id`, `book_copy_reservation_date`, `book_copy_id`, `employee_id`) VALUES
-(1, '2020-01-01', 1, 1),
-(2, '2022-01-01', 1, 2);
+INSERT INTO `book_copy_reservation` (`book_copy_reservation_id`, `book_copy_reservation_date`, `book_copy_id`, `employee_id`, `customer_id`) VALUES
+(1, '2020-01-01', 1, 1, NULL),
+(2, '2022-01-01', 1, 2, NULL);
 
 -- --------------------------------------------------------
 
@@ -443,16 +472,22 @@ ALTER TABLE `author_article`
 --
 ALTER TABLE `book`
   ADD PRIMARY KEY (`book_id`),
-  ADD KEY `publishing_house` (`publishing_house`),
-  ADD KEY `shelves_id` (`shelves_id`),
-  ADD KEY `author_id` (`author_id`);
+  ADD KEY `publishing_house_id` (`publishing_house_id`);
+
+--
+-- Indizes für die Tabelle `book_athor`
+--
+ALTER TABLE `book_athor`
+  ADD PRIMARY KEY (`book_id`,`athor_id`),
+  ADD KEY `athor_id` (`athor_id`);
 
 --
 -- Indizes für die Tabelle `book_copy`
 --
 ALTER TABLE `book_copy`
   ADD PRIMARY KEY (`book_copy_id`),
-  ADD KEY `book_id` (`book_id`);
+  ADD KEY `book_id` (`book_id`),
+  ADD KEY `shelves_id` (`shelves_id`);
 
 --
 -- Indizes für die Tabelle `book_copy_loan`
@@ -477,7 +512,7 @@ ALTER TABLE `book_copy_loan__book_copy_reservation`
 ALTER TABLE `book_copy_reservation`
   ADD PRIMARY KEY (`book_copy_reservation_id`),
   ADD KEY `book_copy_id` (`book_copy_id`),
-  ADD KEY `employee_id` (`employee_id`);
+  ADD KEY `customer_id` (`customer_id`);
 
 --
 -- Indizes für die Tabelle `customer`
@@ -559,25 +594,25 @@ ALTER TABLE `article`
 -- AUTO_INCREMENT für Tabelle `author`
 --
 ALTER TABLE `author`
-  MODIFY `author_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `author_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT für Tabelle `book`
 --
 ALTER TABLE `book`
-  MODIFY `book_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `book_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT für Tabelle `book_copy`
 --
 ALTER TABLE `book_copy`
-  MODIFY `book_copy_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `book_copy_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT für Tabelle `book_copy_loan`
 --
 ALTER TABLE `book_copy_loan`
-  MODIFY `book_copy_loan_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `book_copy_loan_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT für Tabelle `book_copy_reservation`
@@ -649,15 +684,21 @@ ALTER TABLE `author_article`
 -- Constraints der Tabelle `book`
 --
 ALTER TABLE `book`
-  ADD CONSTRAINT `book_ibfk_1` FOREIGN KEY (`publishing_house`) REFERENCES `publishing_house` (`publishing_house_id`),
-  ADD CONSTRAINT `book_ibfk_2` FOREIGN KEY (`shelves_id`) REFERENCES `shelves` (`shelves_id`),
-  ADD CONSTRAINT `book_ibfk_3` FOREIGN KEY (`author_id`) REFERENCES `author` (`author_id`);
+  ADD CONSTRAINT `book_ibfk_1` FOREIGN KEY (`publishing_house_id`) REFERENCES `publishing_house` (`publishing_house_id`);
+
+--
+-- Constraints der Tabelle `book_athor`
+--
+ALTER TABLE `book_athor`
+  ADD CONSTRAINT `book_athor_ibfk_1` FOREIGN KEY (`book_id`) REFERENCES `book` (`book_id`),
+  ADD CONSTRAINT `book_athor_ibfk_2` FOREIGN KEY (`athor_id`) REFERENCES `author` (`author_id`);
 
 --
 -- Constraints der Tabelle `book_copy`
 --
 ALTER TABLE `book_copy`
-  ADD CONSTRAINT `book_copy_ibfk_1` FOREIGN KEY (`book_id`) REFERENCES `book` (`book_id`);
+  ADD CONSTRAINT `book_copy_ibfk_1` FOREIGN KEY (`book_id`) REFERENCES `book` (`book_id`),
+  ADD CONSTRAINT `book_copy_ibfk_2` FOREIGN KEY (`shelves_id`) REFERENCES `shelves` (`shelves_id`);
 
 --
 -- Constraints der Tabelle `book_copy_loan`
@@ -680,7 +721,7 @@ ALTER TABLE `book_copy_loan__book_copy_reservation`
 --
 ALTER TABLE `book_copy_reservation`
   ADD CONSTRAINT `book_copy_reservation_ibfk_1` FOREIGN KEY (`book_copy_id`) REFERENCES `book_copy` (`book_copy_id`),
-  ADD CONSTRAINT `book_copy_reservation_ibfk_2` FOREIGN KEY (`employee_id`) REFERENCES `employee` (`employee_id`);
+  ADD CONSTRAINT `book_copy_reservation_ibfk_2` FOREIGN KEY (`customer_id`) REFERENCES `customer` (`customer_id`);
 
 --
 -- Constraints der Tabelle `journal`
